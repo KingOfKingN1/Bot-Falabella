@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Monitor Falabella</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .status-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-box h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-box p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-start {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-start:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-stop {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-stop:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .ofertas-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .oferta-item {
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        
+        .oferta-item h3 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .oferta-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .oferta-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .oferta-link:hover {
+            text-decoration: underline;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+        
+        .status-inactive {
+            background: #ef4444;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Bot Monitor de Ofertas Falabella</h1>
+            <p>Monitoreo automático 24/7 de ofertas del 98% al 100%</p>
+        </div>
+        
+        <div id="alertBox" class="hidden"></div>
+        
+        <div class="card">
+            <h2>Estado del Bot</h2>
+            <div class="status-card">
+                <div class="stat-box">
+                    <h3 id="statusIndicator">
+                        <span class="status-indicator status-inactive"></span>
+                        Inactivo
+                    </h3>
+                    <p>Estado actual</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="ofertasCount">0</h3>
+                    <p>Ofertas encontradas</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="vistasCount">0</h3>
+                    <p>Ofertas procesadas</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="lastCheck">Nunca</h3>
+                    <p>Último chequeo</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Configuración</h2>
+            <div class="input-group">
+                <label>Número WhatsApp</label>
+                <input type="text" id="whatsappInput" value="+56936394560" placeholder="+56912345678">
+            </div>
+            <div class="input-group">
+                <label>URLs a Monitorear (una por línea)</label>
+                <textarea id="urlsInput" rows="3" placeholder="https://www.falabella.com/falabella-cl/page/ultimas-oportunidades">https://www.falabella.com/falabella-cl/page/ultimas-oportunidades</textarea>
+            </div>
+            <div class="input-group">
+                <label>Intervalo de chequeo (segundos)</label>
+                <input type="number" id="intervaloInput" value="60" min="30">
+            </div>
+            <div class="controls">
+                <button class="btn-start" onclick="iniciarBot()">▶️ Iniciar Bot</button>
+                <button class="btn-stop" onclick="detenerBot()">⏹️ Detener Bot</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Ofertas Encontradas</h2>
+            <div id="ofertasList" class="ofertas-list">
+                <p style="text-align: center; color: #6b7280; padding: 20px;">
+                    No hay ofertas aún. Inicia el bot para comenzar a monitorear.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function mostrarAlerta(mensaje, tipo) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = `alert alert-${tipo}`;
+            alertBox.textContent = mensaje;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => alertBox.classList.add('hidden'), 5000);
+        }
+        
+        async function iniciarBot() {
+            const whatsapp = document.getElementById('whatsappInput').value;
+            const urls = document.getElementById('urlsInput').value.split('\n').filter(u => u.trim());
+            const intervalo = parseInt(document.getElementById('intervaloInput').value);
+            
+            try {
+                const response = await fetch('/api/iniciar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ whatsapp, urls, intervalo })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    mostrarAlerta('✅ Bot iniciado correctamente', 'success');
+                    actualizarEstado();
+                } else {
+                    mostrarAlerta('❌ ' + data.mensaje, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('❌ Error al iniciar el bot', 'error');
+            }
+        }
+        
+        async function detenerBot() {
+            try {
+                const response = await fetch('/api/detener', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    mostrarAlerta('Bot detenido', 'success');
+                    actualizarEstado();
+                } else {
+                    mostrarAlerta('❌ ' + data.mensaje, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('❌ Error al detener el bot', 'error');
+            }
+        }
+        
+        async function actualizarEstado() {
+            try {
+                const response = await fetch('/api/estado');
+                const data = await response.json();
+                
+                const statusText = data.activo ? 
+                    '<span class="status-indicator status-active"></span>Activo' : 
+                    '<span class="status-indicator status-inactive"></span>Inactivo';
+                
+                document.getElementById('statusIndicator').innerHTML = statusText;
+                document.getElementById('ofertasCount').textContent = data.ofertas_encontradas;
+                document.getElementById('vistasCount').textContent = data.ofertas_vistas;
+                document.getElementById('lastCheck').textContent = data.ultimo_chequeo || 'Nunca';
+                
+                await actualizarOfertas();
+            } catch (error) {
+                console.error('Error actualizando estado:', error);
+            }
+        }
+        
+        async function actualizarOfertas() {
+            try {
+                const response = await fetch('/api/ofertas');
+                const data = await response.json();
+                const ofertasList = document.getElementById('ofertasList');
+                
+                if (data.ofertas.length === 0) {
+                    ofertasList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">No hay ofertas aún.</p>';
+                } else {
+                    ofertasList.innerHTML = data.ofertas.map(oferta => `
+                        <div class="oferta-item">
+                            <h3>${oferta.nombre}</h3>
+                            <p>
+                                <span class="oferta-badge">${oferta.descuento}% OFF</span>
+                                <strong>💰 ${oferta.precio}</strong>
+                            </p>
+                            <p style="margin-top: 8px;">
+                                <a href="${oferta.link}" target="_blank" class="oferta-link">🔗 Ver oferta</a>
+                                <span style="color: #6b7280; margin-left: 15px;">⏰ ${oferta.timestamp}</span>
+                            </p>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error actualizando ofertas:', error);
+            }
+        }
+        
+        // Actualizar cada 5 segundos
+        setInterval(actualizarEstado, 5000);
+        actualizarEstado();
+    </script>
+</body>
+</html>
