@@ -1,3 +1,4 @@
+# app.py
 from flask import Flask, render_template, jsonify, request
 import requests
 from bs4 import BeautifulSoup
@@ -13,25 +14,30 @@ import threading
 app = Flask(__name__)
 
 class FalabellaOfertasBot:
-    def __init__(self, whatsapp_number):
+    def __init__(self, whatsapp_number, descuento_min=98, descuento_max=100):
         self.whatsapp_number = whatsapp_number
         self.ofertas_vistas = set()
         self.ofertas_encontradas = []
         self.bot_activo = False
         self.ultimo_chequeo = None
         self.urls_monitorear = []
+        self.descuento_min = descuento_min
+        self.descuento_max = descuento_max
         self.cargar_ofertas_vistas()
         
     def cargar_ofertas_vistas(self):
+        """Carga las ofertas ya vistas desde un archivo"""
         if os.path.exists('ofertas_vistas.json'):
             with open('ofertas_vistas.json', 'r') as f:
                 self.ofertas_vistas = set(json.load(f))
     
     def guardar_ofertas_vistas(self):
+        """Guarda las ofertas vistas en un archivo"""
         with open('ofertas_vistas.json', 'w') as f:
             json.dump(list(self.ofertas_vistas), f)
     
     def scrape_falabella(self, url):
+        """Realiza el scraping de la página de Falabella usando Selenium"""
         chrome_options = Options()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
@@ -86,7 +92,7 @@ class FalabellaOfertasBot:
                         if numeros:
                             descuento = int(numeros[0])
                             
-                            if 98 <= descuento <= 100:
+                            if self.descuento_min <= descuento <= self.descuento_max:
                                 link_elem = producto.find('a', href=True)
                                 link = link_elem['href'] if link_elem else ''
                                 if link and not link.startswith('http'):
@@ -106,7 +112,7 @@ class FalabellaOfertasBot:
             return ofertas
         
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error al hacer scraping: {e}")
             return []
         
         finally:
@@ -122,18 +128,20 @@ class FalabellaOfertasBot:
             response = requests.get(url)
             return response.status_code == 200
         except Exception as e:
+            print(f"Error: {e}")
             return False
     
     def formatear_mensaje(self, ofertas):
-        mensaje = "🔥 OFERTAS 🔥\n\n"
+        mensaje = "🔥 OFERTAS DETECTADAS 🔥\n\n"
         for oferta in ofertas:
             mensaje += f"📦 {oferta['nombre']}\n"
-            mensaje += f"💰 {oferta['precio']}\n"
-            mensaje += f"🎯 {oferta['descuento']}%\n"
+            mensaje += f"💰 Precio: {oferta['precio']}\n"
+            mensaje += f"🎯 Descuento: {oferta['descuento']}%\n"
             mensaje += f"🔗 {oferta['link']}\n\n"
         return mensaje
     
     def ciclo_monitoreo(self, intervalo=60):
+        """Ciclo de monitoreo continuo"""
         while self.bot_activo:
             try:
                 ofertas_nuevas = []
@@ -157,9 +165,10 @@ class FalabellaOfertasBot:
                 time.sleep(intervalo)
                 
             except Exception as e:
-                print(f"Error: {e}")
+                print(f"Error en ciclo: {e}")
                 time.sleep(intervalo)
 
+# Instancia global del bot
 bot = None
 
 @app.route('/')
@@ -180,13 +189,14 @@ def iniciar_bot():
         bot.urls_monitorear = urls
         bot.bot_activo = True
         
+        # Iniciar en un hilo separado
         thread = threading.Thread(target=bot.ciclo_monitoreo, args=(intervalo,))
         thread.daemon = True
         thread.start()
         
-        return jsonify({'status': 'success', 'mensaje': 'Bot iniciado'})
+        return jsonify({'status': 'success', 'mensaje': 'Bot iniciado correctamente'})
     else:
-        return jsonify({'status': 'error', 'mensaje': 'Bot ya activo'})
+        return jsonify({'status': 'error', 'mensaje': 'El bot ya está activo'})
 
 @app.route('/api/detener', methods=['POST'])
 def detener_bot():
@@ -196,7 +206,7 @@ def detener_bot():
         bot.guardar_ofertas_vistas()
         return jsonify({'status': 'success', 'mensaje': 'Bot detenido'})
     else:
-        return jsonify({'status': 'error', 'mensaje': 'Bot no activo'})
+        return jsonify({'status': 'error', 'mensaje': 'El bot no está activo'})
 
 @app.route('/api/estado', methods=['GET'])
 def estado_bot():
@@ -222,10 +232,9 @@ def estado_bot():
 def obtener_ofertas():
     global bot
     if bot:
-        return jsonify({'ofertas': bot.ofertas_encontradas[:20]})
+        return jsonify({'ofertas': bot.ofertas_encontradas[:20]})  # Últimas 20
     else:
         return jsonify({'ofertas': []})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=5000)
