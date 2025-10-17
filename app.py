@@ -70,14 +70,9 @@ class FalabellaOfertasBot:
             for selector in posibles_selectores:
                 productos = soup.select(selector)
                 if productos:
-                    print(f"✅ Encontrados {len(productos)} productos con selector: {selector}")
-                    self.productos_encontrados = len(productos)
                     break
             
             if not productos:
-                print("⚠️  No se encontraron productos. La estructura HTML puede haber cambiado.")
-                self.ultimo_error = "No se encontraron productos en la página"
-                self.productos_encontrados = 0
                 return []
             
             for producto in productos:
@@ -224,11 +219,7 @@ def estado_bot():
             'ultimo_chequeo': bot.ultimo_chequeo,
             'ofertas_encontradas': len(bot.ofertas_encontradas),
             'ofertas_vistas': len(bot.ofertas_vistas),
-            'urls': bot.urls_monitorear,
-            'ultimo_error': bot.ultimo_error,
-            'productos_encontrados': bot.productos_encontrados,
-            'descuento_min': bot.descuento_min,
-            'descuento_max': bot.descuento_max
+            'urls': bot.urls_monitorear
         })
     else:
         return jsonify({
@@ -236,11 +227,7 @@ def estado_bot():
             'ultimo_chequeo': None,
             'ofertas_encontradas': 0,
             'ofertas_vistas': 0,
-            'urls': [],
-            'ultimo_error': None,
-            'productos_encontrados': 0,
-            'descuento_min': 98,
-            'descuento_max': 100
+            'urls': []
         })
 
 @app.route('/api/ofertas', methods=['GET'])
