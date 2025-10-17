@@ -63,7 +63,6 @@
             margin-bottom: 10px;
             background: linear-gradient(45deg, #00d4ff, #ff00ff, #00d4ff);
             background-size: 200% 200%;
-            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: gradient 3s ease infinite;
@@ -359,6 +358,12 @@
                     <h3 id="lastCheck">Nunca</h3>
                     <p>Último chequeo</p>
                 </div>
+            </div>
+            <div id="debugInfo" style="margin-top: 15px; padding: 15px; background: rgba(255, 200, 0, 0.1); border-radius: 10px; border-left: 4px solid #ffaa00; display: none;">
+                <h3 style="color: #ffaa00; margin-bottom: 10px;">🔍 Información de Debug</h3>
+                <p style="color: #fff; margin: 5px 0;"><strong>Productos encontrados:</strong> <span id="productosCount">0</span></p>
+                <p style="color: #fff; margin: 5px 0;"><strong>Rango de descuentos:</strong> <span id="rangoDescuentos">-</span></p>
+                <p style="color: #fff; margin: 5px 0;"><strong>Último error:</strong> <span id="ultimoError">Ninguno</span></p>
             </div>
         </div>
         
